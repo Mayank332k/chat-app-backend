@@ -8,3 +8,4 @@ yarn-error.log*
 .pnpm-debug.log*
 .vscode/
 .idea/
+FRONTEND_API_GUIDE.txt

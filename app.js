@@ -11,8 +11,9 @@ const { app, server } = require("./lib/socket");
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"].filter(Boolean);
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true
 }));
 
