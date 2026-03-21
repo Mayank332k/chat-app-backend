@@ -3,7 +3,7 @@ const User = require("../models/userSchema");
 const cloudinary = require("../lib/cloudinary");
 const { getReceiverSocketId, io } = require("../lib/socket");
 
-// 1. Sidebar ke liye users ki list
+// 1. Sidebar ke liye 
 exports.getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
@@ -15,7 +15,7 @@ exports.getUsersForSidebar = async (req, res) => {
   }
 };
 
-// 2. Chat history dhoondna
+// for chat history
 exports.getMessages = async (req, res) => {
   try {
     const { id: userToChatId } = req.params;
@@ -35,35 +35,44 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-// 3. Naya message bhejna (Real-time update ke saath)
+
 exports.sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    let imageUrl;
-    if (image) {
-      // Base64 image ko Cloudinary pe upload karna
-      const uploadResponse = await cloudinary.uploader.upload(image);
-      imageUrl = uploadResponse.secure_url;
+    let imageUrl = "";
+
+    if (req.file) {
+      const uploadPromise = new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "chat_messages" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result.secure_url);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+
+      imageUrl = await uploadPromise;
     }
 
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
-      image: imageUrl,
+      image: imageUrl || undefined,
     });
 
     await newMessage.save();
 
-    // === REAL-TIME SOCKET LOGIC ===
+
     const receiverSocketId = getReceiverSocketId(receiverId);
     
-    // Agar receiver online hai, toh use turant notification/message bhej do
+    
     if (receiverSocketId) {
-      // 'io.to()' sirf us ek specific socket (receiver) ko message bhejta hai
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
