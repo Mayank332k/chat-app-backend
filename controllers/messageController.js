@@ -1,7 +1,7 @@
 const Message = require("../models/messageSchema");
 const User = require("../models/userSchema");
 const cloudinary = require("../lib/cloudinary");
-const { getReceiverSocketId, io } = require("../lib/socket");
+const { io } = require("../lib/socket");
 
 // 1. Sidebar ke liye 
 exports.getUsersForSidebar = async (req, res) => {
@@ -69,16 +69,14 @@ exports.sendMessage = async (req, res) => {
     await newMessage.save();
 
 
-    const receiverSocketId = getReceiverSocketId(receiverId);
-    
-    
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
-    }
+    io.to(receiverId).emit("newMessage", newMessage);
+
+    // Deliver to the sender's OTHER tabs (so they stays in sync)
+    io.to(senderId).emit("newMessage", newMessage);
 
     res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sendMessage: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" }); 
   }
 };
