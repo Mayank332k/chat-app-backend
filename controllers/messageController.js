@@ -93,11 +93,13 @@ exports.markMessagesAsRead = async (req, res) => {
       { $set: { isRead: true } }
     );
 
-    // Notify the sender that their messages have been read
-    io.to(senderId).emit("messagesRead", {
-      senderId: senderId,
-      receiverId: receiverId,
-    });
+    // Notify BOTH the sender and the receiver (multi-tab sync)
+    const eventPayload = {
+      senderId: senderId.toString(),
+      receiverId: receiverId.toString(),
+    };
+
+    io.to(senderId.toString()).to(receiverId.toString()).emit("messagesRead", eventPayload);
 
     res.status(200).json({ message: "Messages marked as read" });
   } catch (error) {
