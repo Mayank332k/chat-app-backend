@@ -122,3 +122,64 @@ exports.checkAuth = (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 }
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { fullName } = req.body;
+        
+        const updateData = {};
+        if (fullName) updateData.fullName = fullName;
+
+        if (req.file) {
+            const uploadPromise = new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { folder: "chat_app_profiles" },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result.secure_url);
+                    }
+                );
+                uploadStream.end(req.file.buffer);
+            });
+
+            updateData.profilePic = await uploadPromise;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            { new: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+    } catch (error) {
+        console.error("Error in updateProfile:", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
+
+exports.updatePassword = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { oldPassword, newPassword } = req.body;
+        const user = await User.findById(userId);
+        if(!user){
+            return res.status(404).json({message: "User not found"})
+        }
+        const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+        if(!isPasswordValid){
+            return res.status(400).json({message: "Invalid password"})
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+        res.status(200).json({message: "Password updated successfully", user});
+    } catch (error){
+        console.log(error)
+    }
+}

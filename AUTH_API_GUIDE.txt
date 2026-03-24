@@ -1,0 +1,42 @@
+AUTH API DOCUMENTATION
+======================
+
+This guide provides details for implementing Profile and Password updates.
+
+1. UPDATE PROFILE
+-----------------
+Use this endpoint to update the user's full name or profile picture.
+
+- URL: /api/auth/update-profile
+- Method: PUT
+- Authentication: Required (Protected Route)
+- Content-Type: multipart/form-data
+- Body (Form Data):
+    - fullName (String, optional)
+    - profilePic (File, optional)
+- Success Response:
+  {
+    "message": "Profile updated successfully",
+    "user": { ...updatedUserObject }
+  }
+
+2. UPDATE PASSWORD
+------------------
+Use this endpoint to change the user's password.
+
+- URL: /api/auth/update-password
+- Method: PUT
+- Authentication: Required (Protected Route)
+- Body (JSON):
+  {
+    "oldPassword": "current_password",
+    "newPassword": "new_secure_password"
+  }
+- Success Response:
+  {
+    "message": "Password updated successfully"
+  }
+- Error Response (Invalid Old Password):
+  {
+    "message": "Invalid old password"
+  }
