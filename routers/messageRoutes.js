@@ -14,4 +14,7 @@ MessageRouter.get("/:id", protectedRoute, messageController.getMessages);
 // Send message (Handles text and images)
 MessageRouter.post("/send/:id", protectedRoute, upload.single("image"), messageController.sendMessage);
 
+// Mark messages as read
+MessageRouter.put("/read/:id", protectedRoute, messageController.markMessagesAsRead);
+
 module.exports = MessageRouter;
