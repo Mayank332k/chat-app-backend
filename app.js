@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require("./lib/db");
 const authRoutes = require("./routers/authRoutes");
 const messageRoutes = require("./routers/messageRoutes");
+const chatbotRoutes = require("./routers/chatbotRoutes");
 
 const { app, server } = require("./lib/socket");
 
@@ -39,6 +40,7 @@ app.use(cookieParser());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 // Database connection & Server start
 connectDB().then(() => {
