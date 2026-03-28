@@ -2,11 +2,16 @@ const Message = require("../models/messageSchema");
 const User = require("../models/userSchema");
 const cloudinary = require("../lib/cloudinary");
 const { io } = require("../lib/socket");
+const { getOrCreateAiAgent } = require("./chatbotController");
 
 // 1. Sidebar ke liye 
 exports.getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
+
+    // Ensure AI assistant is available
+    await getOrCreateAiAgent();
+
     const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
     res.status(200).json(filteredUsers);
   } catch (error) {
