@@ -98,7 +98,6 @@ exports.markMessagesAsRead = async (req, res) => {
       { $set: { isRead: true } }
     );
 
-    // Notify BOTH the sender and the receiver (multi-tab sync)
     const eventPayload = {
       senderId: senderId.toString(),
       receiverId: receiverId.toString(),

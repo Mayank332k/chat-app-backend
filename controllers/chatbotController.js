@@ -152,7 +152,7 @@ async function callAiModelWithHistory({ history, systemPrompt }) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "stepfun/step-3.5-flash:free", 
+                model: "openai/gpt-oss-20b:free", 
                 messages: [
                     { role: "system", content: systemPrompt },
                     ...history
