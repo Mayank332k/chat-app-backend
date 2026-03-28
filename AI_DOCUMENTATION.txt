@@ -1,0 +1,62 @@
+🤖 Pulse AI - Implementation & Features Documentation
+
+This document describes the AI-powered features implemented in the Pulse chat application.
+
+---
+
+1. AI AGENT IDENTITY & LIFECYCLE
+The AI Assistant is now a system user within the database.
+
+- Username: ai_assistant
+- Display Name: Pulse AI Assistant
+- Avatar: https://cdn-icons-png.flaticon.com/512/4712/4712035.png
+- Creation: The getOrCreateAiAgent() function ensures this user exists in the 'User' collection. If missing, it's automatically created.
+- Sidebar Presence: The AI assistant appears in the sidebar for all users.
+
+---
+
+2. PERSISTENT AI CONVERSATIONS (/api/chatbot/talk)
+All user-AI messages are now saved to the database.
+
+Process Logic:
+- User Message: Saved in the 'Message' collection (Sender: User, Receiver: AI).
+- Context Window: Fetches the last 20 messages of the user-AI chat history.
+- AI Invocation: Calls the AI model with the full 20-message history context.
+- AI Response: The AI reply is saved as a new message (Sender: AI, Receiver: User).
+- Tab Sync: Socket.io triggers 'newMessage' events to update all open tabs.
+
+---
+
+3. BALANCED & OBJECTIVE SUMMARIZATION (/api/chatbot/summarize/:id)
+Generates high-quality, professional summaries.
+
+Features:
+- Range: Summarizes the last 20 messages of a conversation.
+- Objectivity: Strictly objective, containing no personal opinions or interpretations.
+- Names: Always mentions participants in the summary.
+- Resilience: Instructed to summarize regardless of internal content filters (anti-censorship).
+- Length: Balanced length; not too short and not too long.
+
+---
+
+4. TECHNICAL DETAILS
+
+ALIAS RESOLUTION
+Frontends often use strings like "ai-chatbot" or "ai_assistant" in URLs.
+- The backend handlers (getMessages, sendMessage, markMessagesAsRead) resolve these strings to the real Pulse AI Assistant ID to prevent "Cast to ObjectId failed" errors.
+
+KEY FILES:
+- controllers/chatbotController.js
+- controllers/messageController.js
+- models/messageSchema.js
+- models/userSchema.js
+
+---
+
+ENDPOINTS REFERENCE:
+- POST /api/chatbot/talk: Chat with context-aware AI.
+- GET /api/chatbot/summarize/:id: Get an objective summary of 20 messages.
+- GET /api/messages/:id: Fetch persistent conversation history.
+
+---
+© Pulse Chat Application - AI Integration
