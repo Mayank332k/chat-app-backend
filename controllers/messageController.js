@@ -31,6 +31,7 @@ exports.getMessages = async (req, res) => {
         { senderId: senderId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: senderId },
       ],
+      deletedBy: { $ne: senderId }, // Filter out messages deleted for me
     }).sort({ createdAt: 1 });
 
     res.status(200).json(conversation);
@@ -113,3 +114,79 @@ exports.markMessagesAsRead = async (req, res) => {
 };
 
 
+
+exports.clearChat = async (req, res) => {
+  try {
+    const { id: userToChatId } = req.params;
+    const senderId = req.user._id;
+
+    // Use updateMany to add the user to the deletedBy array instead of deleting from DB
+    await Message.updateMany(
+      {
+        $or: [
+          { senderId: senderId, receiverId: userToChatId },
+          { senderId: userToChatId, receiverId: senderId },
+        ],
+        deletedBy: { $ne: senderId },
+      },
+      { $addToSet: { deletedBy: senderId } }
+    );
+
+    res.status(200).json({ message: "Chat cleared successfully for you" });
+  } catch (error) {
+    console.error("Error in clearChat: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+exports.deleteMessageForMe = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findByIdAndUpdate(
+      messageId,
+      { $addToSet: { deletedBy: userId } },
+      { new: true }
+    );
+
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    res.status(200).json({ message: "Message deleted for you", messageId });
+  } catch (error) {
+    console.error("Error in deleteMessageForMe: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.deleteMessageForEveryone = async (req, res) => {
+  try {
+    const { id: messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findOne({ _id: messageId, senderId: userId });
+
+    if (!message) {
+      return res.status(404).json({ error: "Message not found or you are not the sender" });
+    }
+
+    message.isDeletedForEveryone = true;
+    message.text = "Deleted message"; // Provide a placeholder
+    message.image = undefined;
+    
+    await message.save();
+
+    // Notify other users via socket
+    const receiverId = message.receiverId.toString();
+    io.to(receiverId).emit("messageDeletedForEveryone", { messageId });
+    io.to(userId.toString()).emit("messageDeletedForEveryone", { messageId });
+
+    res.status(200).json({ message: "Message deleted for everyone", messageId });
+  } catch (error) {
+    console.error("Error in deleteMessageForEveryone: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

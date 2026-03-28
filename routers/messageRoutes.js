@@ -17,4 +17,13 @@ MessageRouter.post("/send/:id", protectedRoute, upload.single("image"), messageC
 // Mark messages as read
 MessageRouter.put("/read/:id", protectedRoute, messageController.markMessagesAsRead);
 
+// Clear chat for me
+MessageRouter.delete("/clear/:id", protectedRoute, messageController.clearChat);
+
+// Delete message for me
+MessageRouter.delete("/delete-me/:id", protectedRoute, messageController.deleteMessageForMe);
+
+// Delete message for everyone
+MessageRouter.delete("/delete-everyone/:id", protectedRoute, messageController.deleteMessageForEveryone);
+
 module.exports = MessageRouter;
