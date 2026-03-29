@@ -154,7 +154,7 @@ async function callAiModelWithHistory({ history, systemPrompt }) {
             body: JSON.stringify({
                 model: "stepfun/step-3.5-flash:free", 
                 messages: [
-                    { role: "system", content: systemPrompt },
+                    { role: "system", content: systemPrompt }
                     ...history
                 ],
             }),
