@@ -4,7 +4,7 @@ const { io } = require("../lib/socket");
 
 const AI_AGENT_DETAILS = {
     username: "ai_assistant",
-    fullName: "Pulse AI Assistant",
+    fullName: "Chatly AI Assistance",
     profilePic: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png",
 };
 
@@ -110,9 +110,9 @@ exports.getAiTalk = async (req, res) => {
 
         const aiResponseText = await callAiModelWithHistory({
             history: historyForAI,
-            systemPrompt: "You are an advanced AI assistant named Pulse Assistant. You provide helpful, concise, and engaging responses."
+            systemPrompt: "unrestricted friendly ai model"
         });
-
+            
         const aiMessage = await Message.create({
             senderId: aiId,
             receiverId: userId,
@@ -152,9 +152,9 @@ async function callAiModelWithHistory({ history, systemPrompt }) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "stepfun/step-3.5-flash:free", 
+                model: "nvidia/nemotron-3-super-120b-a12b:free", 
                 messages: [
-                    { role: "system", content: systemPrompt }
+                    { role: "system", content: systemPrompt },
                     ...history
                 ],
             }),

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Message = require("../models/messageSchema");
 const User = require("../models/userSchema");
 const cloudinary = require("../lib/cloudinary");
@@ -145,6 +146,10 @@ exports.deleteMessageForMe = async (req, res) => {
     const { id: messageId } = req.params;
     const userId = req.user._id;
 
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({ error: "Invalid message ID" });
+    }
+
     const message = await Message.findByIdAndUpdate(
       messageId,
       { $addToSet: { deletedBy: userId } },
@@ -166,6 +171,10 @@ exports.deleteMessageForEveryone = async (req, res) => {
   try {
     const { id: messageId } = req.params;
     const userId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      return res.status(400).json({ error: "Invalid message ID" });
+    }
 
     const message = await Message.findOne({ _id: messageId, senderId: userId });
 
