@@ -49,6 +49,10 @@ exports.sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
+    // Ensure AI Agent is initialized and get its details
+    const aiAgent = await getOrCreateAiAgent();
+    const isAiReceiver = receiverId.toString() === aiAgent._id.toString();
+
     let imageUrl = "";
 
     if (req.file) {
@@ -75,11 +79,20 @@ exports.sendMessage = async (req, res) => {
 
     await newMessage.save();
 
-
+    // Real-time delivery to receiver only (sender gets data from HTTP response)
     io.to(receiverId).emit("newMessage", newMessage);
 
-    // Deliver to the sender's OTHER tabs (so they stays in sync)
-    io.to(senderId).emit("newMessage", newMessage);
+    // AI Trigger Hook
+    if (isAiReceiver) {
+      // We don't await the AI talk to keep the response fast for the user
+      // But we can trigger it asynchronously
+      const { getAiTalkForIntegration } = require("./chatbotController");
+      if (typeof getAiTalkForIntegration === "function") {
+          getAiTalkForIntegration(senderId, text);
+      } else {
+          console.warn("⚠️ getAiTalkForIntegration not found in chatbotController. AI will not respond.");
+      }
+    }
 
     res.status(201).json(newMessage);
   } catch (error) {
@@ -87,6 +100,7 @@ exports.sendMessage = async (req, res) => {
     res.status(500).json({ error: "Internal server error" }); 
   }
 };
+
 
 
 exports.markMessagesAsRead = async (req, res) => {
