@@ -5,12 +5,10 @@ const cloudinary = require("../lib/cloudinary");
 const { io } = require("../lib/socket");
 const { getOrCreateAiAgent } = require("./chatbotController");
 
-// 1. Sidebar ke liye 
 exports.getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
 
-    // Ensure AI assistant is available
     await getOrCreateAiAgent();
 
     const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select("-password");
@@ -21,7 +19,6 @@ exports.getUsersForSidebar = async (req, res) => {
   }
 };
 
-// for chat history
 exports.getMessages = async (req, res) => {
   try {
     const { id: userToChatId } = req.params;
@@ -49,7 +46,6 @@ exports.sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    // Ensure AI Agent is initialized and get its details
     const aiAgent = await getOrCreateAiAgent();
     const isAiReceiver = receiverId.toString() === aiAgent._id.toString();
 
@@ -82,15 +78,10 @@ exports.sendMessage = async (req, res) => {
     // Real-time delivery to receiver only (sender gets data from HTTP response)
     io.to(receiverId).emit("newMessage", newMessage);
 
-    // AI Trigger Hook
     if (isAiReceiver) {
-      // We don't await the AI talk to keep the response fast for the user
-      // But we can trigger it asynchronously
       const { getAiTalkForIntegration } = require("./chatbotController");
       if (typeof getAiTalkForIntegration === "function") {
-          getAiTalkForIntegration(senderId, text);
-      } else {
-          console.warn("⚠️ getAiTalkForIntegration not found in chatbotController. AI will not respond.");
+        getAiTalkForIntegration(senderId, text);
       }
     }
 
@@ -108,7 +99,6 @@ exports.markMessagesAsRead = async (req, res) => {
     const { id: senderId } = req.params;
     const receiverId = req.user._id;
 
-    // Update all unread messages from this sender to the current user
     await Message.updateMany(
       { senderId: senderId, receiverId: receiverId, isRead: false },
       { $set: { isRead: true } }
@@ -135,7 +125,6 @@ exports.clearChat = async (req, res) => {
     const { id: userToChatId } = req.params;
     const senderId = req.user._id;
 
-    // Use updateMany to add the user to the deletedBy array instead of deleting from DB
     await Message.updateMany(
       {
         $or: [
@@ -167,7 +156,7 @@ exports.deleteMessageForMe = async (req, res) => {
     const message = await Message.findByIdAndUpdate(
       messageId,
       { $addToSet: { deletedBy: userId } },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!message) {
@@ -197,12 +186,11 @@ exports.deleteMessageForEveryone = async (req, res) => {
     }
 
     message.isDeletedForEveryone = true;
-    message.text = "Deleted message"; // Provide a placeholder
+    message.text = "Deleted message";
     message.image = undefined;
     
     await message.save();
 
-    // Notify other users via socket
     const receiverId = message.receiverId.toString();
     io.to(receiverId).emit("messageDeletedForEveryone", { messageId });
     io.to(userId.toString()).emit("messageDeletedForEveryone", { messageId });

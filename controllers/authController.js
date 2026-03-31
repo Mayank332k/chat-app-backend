@@ -149,7 +149,7 @@ exports.updateProfile = async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $set: updateData },
-            { new: true }
+            { returnDocument: 'after' }
         ).select("-password");
 
         if (!updatedUser) {
