@@ -76,7 +76,7 @@ exports.sendMessage = async (req, res) => {
     await newMessage.save();
 
     // Real-time delivery to receiver only (sender gets data from HTTP response)
-    io.to(receiverId).emit("newMessage", newMessage);
+    io.to(receiverId.toString()).emit("newMessage", newMessage);
 
     if (isAiReceiver) {
       const { getAiTalkForIntegration } = require("./chatbotController");
