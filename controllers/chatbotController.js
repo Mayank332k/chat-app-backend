@@ -201,7 +201,7 @@ async function callAiModelWithHistory({ history, systemPrompt }) {
         const MODEL = "sarvam-30b";
         
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
+        const timeout = setTimeout(() => controller.abort(), 40000);
 
         const response = await fetch("https://api.sarvam.ai/v1/chat/completions", {
             method: "POST",
@@ -216,7 +216,7 @@ async function callAiModelWithHistory({ history, systemPrompt }) {
                     { role: "system", content: systemPrompt },
                     ...history
                 ],
-                max_tokens: 20000,
+                max_tokens: 4000,
                 temperature: 0.7,
             }),
         });
