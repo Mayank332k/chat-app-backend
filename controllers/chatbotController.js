@@ -216,7 +216,7 @@ async function callAiModelWithHistory({ history, systemPrompt }) {
                     { role: "system", content: systemPrompt },
                     ...history
                 ],
-                max_tokens: 2000,
+                max_tokens: 20000,
                 temperature: 0.7,
             }),
         });
